@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
+import 'package:intl/intl.dart';
 import 'package:sumed/models/message_model.dart';
 
 import '../models/user_model.dart';
@@ -15,9 +16,12 @@ class Conversation extends StatelessWidget {
   final User user;
   final ScrollController _controller = ScrollController();
 
+
   void moveToEndOfList() {
     Future.delayed(const Duration(milliseconds: 250), () {
-      _controller.jumpTo(_controller.position.maxScrollExtent);
+      try {
+        _controller.jumpTo(_controller.position.maxScrollExtent);
+      } catch (e) {}
     });
   }
 

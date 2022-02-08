@@ -21,6 +21,7 @@ dependencies:
   get: ^4.6.1
   awesome_select: ^5.1.0
   google_fonts: ^2.2.0
+  intl: ^0.17.0
 
 
 #chat features

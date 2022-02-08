@@ -7,11 +7,26 @@ import 'package:sumed/models/user_model.dart';
 import 'app_theme.dart';
 import 'chat_room.dart';
 
+/**
+ *  Date add in conversation
+
+|
+
+Send button need to complete
+
+|
+
+Bottomsheet with chips
+ * 
+ */
+
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
+
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
@@ -23,7 +38,7 @@ class MyApp extends StatelessWidget {
         textTheme: GoogleFonts.poppinsTextTheme(
           Theme.of(context).textTheme,
         ),
-        primarySwatch: MyTheme.createMaterialColor(Colors.white),
+        primarySwatch: MyTheme.createMaterialColor(MyTheme.kPrimaryColorVariant),
         visualDensity: VisualDensity.standard,
       ),
       home: ChatRoom(user: botSuMed),
