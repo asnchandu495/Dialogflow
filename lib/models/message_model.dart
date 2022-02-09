@@ -21,7 +21,7 @@ class Message {
   });
 }
 
-final List<Message> recentChats = [
+/* final List<Message> recentChats = [
   Message(
       sender: addison,
       avatar: 'assets/images/Addison.jpg',
@@ -85,7 +85,7 @@ final List<Message> allChats = [
     unreadCount: 2,
     isRead: false,
   ),
-];
+]; */
 
 /*final List<Message> messages = [
   Message(

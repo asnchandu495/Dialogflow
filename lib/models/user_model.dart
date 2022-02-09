@@ -10,21 +10,24 @@ class User {
   });
 }
 
-final User currentUser =
-    User(id: 0, name: 'You', avatar: 'assets/images/user.png');
+final allUserList = [_jack, _addison, _angel, _deanna];
+
+ User currentUser = _jack;
+
+final User _jack = User(id: 0, name: 'Jack', avatar: 'assets/images/user.png');
 
 final User botSuMed =
     User(id: 110, name: 'SuMed', avatar: 'assets/images/bot.jpg');
 
-final User addison =
-    User(id: 1, name: 'Addison', avatar: 'assets/images/bot.jpg');
+final User _addison =
+    User(id: 1, name: 'Addison', avatar: 'assets/images/user.png');
 
-final User angel =
-    User(id: 2, name: 'Angel', avatar: 'assets/images/Angel.jpg');
+final User _angel =
+    User(id: 2, name: 'Angel', avatar: 'assets/images/user.png');
 
-final User deanna =
-    User(id: 3, name: 'Deanna', avatar: 'assets/images/Deanna.jpg');
-
+final User _deanna =
+    User(id: 3, name: 'Deanna', avatar: 'assets/images/user.png');
+/* 
 final User jason = User(id: 4, name: 'Json', avatar: 'assets/images/Jason.jpg');
 
 final User judd = User(id: 5, name: 'Judd', avatar: 'assets/images/Judd.jpg');
@@ -40,3 +43,4 @@ final User stanley =
 
 final User virgil =
     User(id: 9, name: 'Virgil', avatar: 'assets/images/Virgil.jpg');
+ */

@@ -30,7 +30,14 @@ class _ChatRoomState extends State<ChatRoom> {
   var isBottomSheetShow = false.obs;
   var bottomSheetTitle = "".obs;
   RxList<String> bottomSheetValueSelection = RxList();
+  RxList<String> multipleValueQueue = RxList();
+
   RxList<S2Choice<String>> choiceValues = RxList();
+  bool _isSingleSelection = false;
+  int _layoutType = 0;
+  bool _isForName = false;
+
+  RxBool isWaitForAnotherMessage = false.obs;
 
   @override
   void initState() {
@@ -40,6 +47,17 @@ class _ChatRoomState extends State<ChatRoom> {
       dialogFlowtter = instance;
       Future.delayed(const Duration(seconds: 1), () {
         _checkForMessage("Hello");
+
+        if (allUserList.isNotEmpty) {
+          for (var element in allUserList) {
+            choiceValues
+                .add(S2Choice(title: element.name, value: element.name));
+          }
+          _isSingleSelection = true;
+          _isForName = true;
+          isBottomSheetShow.value = true;
+          bottomSheetTitle.value = "Select patient name";
+        }
       });
     });
   }
@@ -50,7 +68,12 @@ class _ChatRoomState extends State<ChatRoom> {
       case dialogFlow.MessageType.payload:
         if (message.payload != null) {
           values.add("1");
-          values.addAll(_parsePayload(message.payload!));
+          var parsedValue = _parsePayload(message.payload!);
+          int type = parsedValue['op'];
+          values.addAll(parsedValue['values']);
+          _isSingleSelection = type < 2;
+          print("**********is Single selection $_isSingleSelection");
+          ;
 
           // String caption = values.removeAt(0);
 
@@ -70,20 +93,38 @@ class _ChatRoomState extends State<ChatRoom> {
     }
   }
 
-  List<String> _parsePayload(Map<String, dynamic> payload) {
+  Map<String, dynamic> _parsePayload(Map<String, dynamic> payload) {
+    final Map<String, dynamic> map = {};
     List<String> values = [];
     CustomPayload receivedPayload = CustomPayload.fromJson(payload);
     /*if (!_isCalled) {
       onExtraMessage.call(receivedPayload.contentTitle!);
       _isCalled = true;
     }*/
+    int type = receivedPayload.outputValue!;
+    _layoutType = receivedPayload.layoutType!;
+    map["op"] = type;
     values.add(receivedPayload.contentTitle!);
     for (var element in receivedPayload.richContent!) {
       for (var innerElement in element) {
         if (innerElement.type! == "list") values.add(innerElement.title!);
       }
     }
-    return values;
+    map["values"] = values;
+    return map;
+  }
+
+  _initQueueSendingMessage() {
+    isWaitForAnotherMessage.listen((p0) {
+      if (p0) {
+        bool hasValue = multipleValueQueue.value.isNotEmpty;
+        if (hasValue) {
+          var valueToSend = multipleValueQueue.value.removeAt(0);
+          print("SENDING MESSAGE TO DF $valueToSend");
+          _checkForMessage(valueToSend);
+        }
+      }
+    });
   }
 
   Future<void> _checkForMessage(text, [bool isUserMessage = false]) async {
@@ -92,15 +133,25 @@ class _ChatRoomState extends State<ChatRoom> {
       queryInput: dialogFlow.QueryInput(text: dialogFlow.TextInput(text: text)),
     );
 
+    // print("RECEIVED TEXT = ${response.props.toString()}");
     if (response.message == null) return;
 
     // msgController.messages
     addMessage(response.message!, isUserMessage);
+
+    if (isWaitForAnotherMessage.value) {
+      isWaitForAnotherMessage.value = false;
+      isWaitForAnotherMessage.value = true;
+      if (multipleValueQueue.isEmpty) {
+        isWaitForAnotherMessage.value = false;
+        multipleValueQueue.close();
+      }
+    }
   }
 
   Future<void> addMessage(dialogFlow.Message message,
       [bool isUserMessage = false]) async {
-    print("********** ${message.toString()}");
+    // print("********** ${message.toString()}");
     String textToDisplay = "";
     if (!isUserMessage) {
       List<String> values = determineMessageType(message);
@@ -117,14 +168,7 @@ class _ChatRoomState extends State<ChatRoom> {
       textToDisplay = message.text!.text![0].toString();
     }
 
-    var appMsgs = appMessage.Message(
-        sender: isUserMessage ? currentUser : botSuMed,
-        avatar: isUserMessage ? currentUser.avatar : botSuMed.avatar,
-        text: textToDisplay,
-        time: _getTimeValue(),
-        isRead: true,
-        unreadCount: 0);
-    msgController.messages.add(appMsgs);
+    _addMessageToConversation(isUserMessage, textToDisplay);
   }
 
   String _getTimeValue() {
@@ -169,7 +213,6 @@ class _ChatRoomState extends State<ChatRoom> {
     return Scaffold(
       appBar: AppBar(
         centerTitle: false,
-
         title: Row(
           children: [
             CircleAvatar(
@@ -234,11 +277,15 @@ class _ChatRoomState extends State<ChatRoom> {
                 ),
               ),
             ),
-            Obx(() => IgnorePointer(
-                ignoring: isBottomSheetShow.value, child: buildChatComposer())),
+            Obx(() => Visibility(
+                visible: !(isBottomSheetShow.value),
+                child: buildChatComposer())),
             Obx(() => Visibility(
                   visible: isBottomSheetShow.value,
-                  child: _smartSelect(),
+                  child: _getInputLayout(),
+                  /*child: _isSingleSelection
+                      ? _smartChipSelectForSingle(_isForName)
+                      : _smartSelect(),*/
                 ))
           ],
         ),
@@ -246,7 +293,7 @@ class _ChatRoomState extends State<ChatRoom> {
     );
   }
 
-  SmartSelect _smartSelect() {
+  SmartSelect _smartSelect(bool isForProblems) {
     SmartSelect sele = SmartSelect<String>.multiple(
       choiceType: S2ChoiceType.chips,
       title: bottomSheetTitle.value,
@@ -255,7 +302,36 @@ class _ChatRoomState extends State<ChatRoom> {
       onChange: (selected) {
         bottomSheetValueSelection.clear();
         bottomSheetValueSelection.addAll(selected!.value!.toList());
-        sendMessage(selected.value![0]);
+        if (isForProblems) {
+          multipleValueQueue.clear();
+          multipleValueQueue.addAll(bottomSheetValueSelection);
+          isForProblems = false;
+          _initQueueSendingMessage();
+          isWaitForAnotherMessage.value = true;
+
+          // multipleValueQueue.listen((values) { values.forEach((element) { })});
+        }
+        var valueToSend = "";
+        for (var element in selected.value!) {
+          if (selected.value!.length == 1) {
+            valueToSend = element;
+          } else {
+            valueToSend += element + ",";
+          }
+        }
+
+        bool containsExtraComma = valueToSend.endsWith(",");
+        if (containsExtraComma) {
+          valueToSend = valueToSend.substring(0, valueToSend.length - 1);
+          /*valueToSend = valueToSend.replaceRange(
+              valueToSend.length - 1, valueToSend.length - 1, '');*/
+        }
+
+        print(
+            "SELECTED VALUES = ${bottomSheetValueSelection.value.toString()}");
+
+        // sendMessage(valueToSend);
+        _addMessageToConversation(true, valueToSend);
         isBottomSheetShow.value = false;
         choiceValues.clear();
       },
@@ -276,12 +352,6 @@ class _ChatRoomState extends State<ChatRoom> {
           crossAxisSpacing: 0,
           crossAxisCount: 2,
         ),
-        /*style: S2ChoiceStyle(
-            control: S2ChoiceControl.leading,
-            highlightColor: MyTheme.kAccentColor,
-            accentColor: MyTheme.kAccentColor,
-
-            raised: true),*/
       ),
       modalConfirm: false,
 
@@ -314,11 +384,54 @@ class _ChatRoomState extends State<ChatRoom> {
         );
       },
     );
-    /*isBottomSheetShow.listen((p0) {
-      if(p0){
-        sele.createElement();
-      }
-    })*/
+
+    return sele;
+  }
+
+  SmartSelect _smartChipSelectForSingle(bool isForName) {
+    SmartSelect sele = SmartSelect<String>.single(
+      choiceType: S2ChoiceType.chips,
+      title: bottomSheetTitle.value,
+      selectedValue: "",
+      onChange: (selected) {
+        bottomSheetValueSelection.clear();
+        // bottomSheetValueSelection.addAll(selected!.value!.toList());
+        sendMessage(selected.value!);
+        if (_isForName) {
+          currentUser = allUserList
+              .firstWhere((element) => element.name == selected.value);
+          _isForName = false;
+        }
+        isBottomSheetShow.value = false;
+        choiceValues.clear();
+        _isSingleSelection = false;
+      },
+      choiceItems: choiceValues,
+      choiceActiveStyle: S2ChoiceStyle(highlightColor: MyTheme.kAccentColor),
+      choiceConfig: S2ChoiceConfig(
+        type: S2ChoiceType.chips,
+        activeStyle: S2ChoiceStyle(
+            control: S2ChoiceControl.leading,
+            highlightColor: MyTheme.kAccentColor,
+            accentColor: MyTheme.kAccentColor,
+            raised: true),
+        layout: S2ChoiceLayout.grid,
+        padding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          childAspectRatio: 3.5,
+          mainAxisSpacing: 0,
+          crossAxisSpacing: 0,
+          crossAxisCount: 2,
+        ),
+      ),
+      modalConfirm: false,
+      modalType: S2ModalType.bottomSheet,
+      modalValidation: (selected) {
+        if (selected == null) return 'Select at least one';
+        return '';
+      },
+    );
+
     return sele;
   }
 
@@ -382,5 +495,27 @@ class _ChatRoomState extends State<ChatRoom> {
         ],
       ),
     );
+  }
+
+  void _addMessageToConversation(bool isUserMessage, String textToDisplay) {
+    var appMsgs = appMessage.Message(
+        sender: isUserMessage ? currentUser : botSuMed,
+        avatar: isUserMessage ? currentUser.avatar : botSuMed.avatar,
+        text: textToDisplay,
+        time: _getTimeValue(),
+        isRead: true,
+        unreadCount: 0);
+    msgController.messages.add(appMsgs);
+  }
+
+  Widget _getInputLayout() {
+    switch (_layoutType) {
+      case 1:
+        //patch to overcome value assign of selection
+        return _smartSelect(true);
+      case 0:
+      default:
+        return _smartChipSelectForSingle(_isForName);
+    }
   }
 }
