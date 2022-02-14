@@ -22,6 +22,8 @@ dependencies:
   awesome_select: ^5.1.0
   google_fonts: ^2.2.0
   intl: ^0.17.0
+  direct_select_flutter: ^1.1.1
+  numberpicker: ^2.1.1
 
 
 #chat features
