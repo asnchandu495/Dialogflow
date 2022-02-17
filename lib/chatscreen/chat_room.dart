@@ -8,12 +8,14 @@ import 'package:flutter/scheduler.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_instance/src/extension_instance.dart';
+import 'package:get/get_rx/src/rx_types/rx_types.dart';
 import 'package:intl/intl.dart';
 import 'package:numberpicker/numberpicker.dart';
 import 'package:sumed/customfunctionality/chat_composer.dart';
 import 'package:sumed/customfunctionality/conversation.dart';
 import 'package:sumed/customfunctionality/drop_down_list_model.dart';
 import 'package:sumed/customfunctionality/select_drop_down_list.dart';
+import 'package:sumed/models/chat_message_holder.dart';
 import 'package:sumed/models/custom_payload.dart';
 import 'package:sumed/models/message_model.dart' as appMessage;
 import 'package:sumed/models/message_model.dart';
@@ -40,7 +42,7 @@ class ChatRoom extends StatefulWidget {
   final User user;
 }
 
-class _ChatRoomState extends State<ChatRoom> {
+class _ChatRoomState extends State<ChatRoom> with RestorationMixin {
   late dialogFlow.DialogFlowtter dialogFlowtter;
   var msgController = Get.put(MessageController());
   var isBottomSheetShow = false.obs;
@@ -623,12 +625,11 @@ class _ChatRoomState extends State<ChatRoom> {
 
                 await _sendMessage(valueToSend);
 
-                Future.delayed(const Duration(milliseconds: 250),(){
+                Future.delayed(const Duration(milliseconds: 250), () {
                   if (_multipleValueQueue.isNotEmpty) {
                     _isWaitForAnotherMessage.value = true;
                   }
                 });
-
               },
             ),
           ),
@@ -843,6 +844,11 @@ class _ChatRoomState extends State<ChatRoom> {
     );
   }
 
+
+  // final Map<String, List<appMessage.Message>> _allMessages = {};
+  // final List<appMessage.Message> _userMessage = [];
+  // final List<appMessage.Message> _botMessage = [];
+
   void _addMessageToConversation(bool isUserMessage, String textToDisplay) {
     var appMsgs = appMessage.Message(
         sender: isUserMessage ? currentUser : botSuMed,
@@ -851,7 +857,24 @@ class _ChatRoomState extends State<ChatRoom> {
         time: _getTimeValue(),
         isRead: true,
         unreadCount: 0);
-    msgController.messages.add(appMsgs);
+
+ /*   if (isUserMessage) {
+      _userMessage.add(appMsgs);
+
+      _allMessages['user'] = _userMessage;
+    } else {
+      _botMessage.add(appMsgs);
+      _allMessages['bot'] = _botMessage;
+    }*/
+
+
+    /*msgController.chatMessageHolder.listen((p0) {
+
+      p0.value;
+    });*/
+    // msgController.messages.add(appMsgs);
+
+    msgController.chatMessageHolder.value.value.add(appMsgs);
   }
 
   Widget _getInputLayout() {
@@ -902,6 +925,15 @@ class _ChatRoomState extends State<ChatRoom> {
         itemBuilder: (context, value) {
           return Text(value);
         });
+  }
+
+  @override
+  // TODO: implement restorationId
+  String? get restorationId => 'chat_room';
+
+  @override
+  void restoreState(RestorationBucket? oldBucket, bool initialRestore) {
+    registerForRestoration(msgController.chatMessageHolder.value, 'chat_conversation');
   }
 }
 

@@ -21,7 +21,7 @@ Bottomsheet with chips
  */
 
 void main() {
-  runApp(const MyApp());
+  runApp(const RestorationScope(restorationId: 'root', child:  MyApp()));
 }
 
 class MyApp extends StatelessWidget {

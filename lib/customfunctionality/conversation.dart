@@ -1,6 +1,5 @@
 import 'package:get/get.dart';
-import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
-import 'package:intl/intl.dart';
+
 import 'package:sumed/models/message_model.dart';
 
 import '../models/user_model.dart';
@@ -29,7 +28,7 @@ class Conversation extends StatelessWidget {
   Widget build(BuildContext context) {
     moveToEndOfList();
     final msgController = Get.put(MessageController());
-    msgController.messages.listen((val) {
+    msgController.chatMessageHolder.listen((val) {
       moveToEndOfList();
     });
 
@@ -39,13 +38,13 @@ class Conversation extends StatelessWidget {
           return Obx(() => ListView.builder(
               // reverse: true,
               controller: _controller,
-              itemCount: msgController.messages.length,
+              itemCount: msgController.chatMessageHolder.value.value.length,
               itemBuilder: (context, int index) {
-                final message = msgController.messages[index];
+                final message = msgController.chatMessageHolder.value.value[index];
                 bool isMe = message.sender.id == currentUser.id;
                 final String userName =
-                    msgController.messages[index].sender.name + "\n";
-                String text = msgController.messages[index].text;
+                    msgController.chatMessageHolder.value.value[index].sender.name + "\n";
+                String text = msgController.chatMessageHolder.value.value[index].text;
                 return Container(
                   margin: const EdgeInsets.only(top: 10),
                   child: Column(

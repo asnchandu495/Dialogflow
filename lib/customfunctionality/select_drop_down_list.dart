@@ -59,7 +59,7 @@ class _SelectDropListState extends State<SelectDropList>
         children: <Widget>[
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 17),
-            decoration: new BoxDecoration(
+            decoration:  BoxDecoration(
               borderRadius: BorderRadius.circular(20.0),
               color: Colors.white,
               boxShadow: [
@@ -67,7 +67,7 @@ class _SelectDropListState extends State<SelectDropList>
                     blurRadius: 10, color: Colors.black26, offset: Offset(0, 2))
               ],
             ),
-            child: new Row(
+            child:  Row(
               mainAxisSize: MainAxisSize.max,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[

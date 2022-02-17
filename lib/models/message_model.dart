@@ -2,6 +2,7 @@ import 'package:get/get_rx/src/rx_types/rx_types.dart';
 import 'package:get/get_state_manager/src/simple/get_controllers.dart';
 
 import './user_model.dart';
+import 'chat_message_holder.dart';
 
 class Message {
   final User sender;
@@ -145,7 +146,9 @@ final List<Message> allChats = [
 ];*/
 
 class MessageController extends GetxController {
-  final RxList<Message> messages = RxList([]);
+  // final RxList<Message> messages = RxList([]);
+  final Rx<ChatMessageHolder> chatMessageHolder =
+  Rx<ChatMessageHolder>(ChatMessageHolder());
 
 /*@override
   void onInit() {
