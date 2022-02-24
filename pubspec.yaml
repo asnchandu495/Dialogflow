@@ -19,7 +19,7 @@ dependencies:
   flutter_chat_ui: ^1.5.5
   modal_bottom_sheet: ^2.0.0
   get: ^4.6.1
-  awesome_select: ^5.1.0
+#  awesome_select: ^5.1.0
   google_fonts: ^2.2.0
   intl: ^0.17.0
   direct_select_flutter: ^1.1.1

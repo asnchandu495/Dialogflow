@@ -15,7 +15,6 @@ class Conversation extends StatelessWidget {
   final User user;
   final ScrollController _controller = ScrollController();
 
-
   void moveToEndOfList() {
     Future.delayed(const Duration(milliseconds: 250), () {
       try {
@@ -38,13 +37,21 @@ class Conversation extends StatelessWidget {
           return Obx(() => ListView.builder(
               // reverse: true,
               controller: _controller,
-              itemCount: msgController.chatMessageHolder.value.value.length,
+              itemCount: msgController
+                  .chatMessageHolder
+                  /*.value .value*/
+                  .length,
               itemBuilder: (context, int index) {
-                final message = msgController.chatMessageHolder.value.value[index];
+                final message =
+                    msgController.chatMessageHolder /*.value .value*/ [index];
                 bool isMe = message.sender.id == currentUser.id;
-                final String userName =
-                    msgController.chatMessageHolder.value.value[index].sender.name + "\n";
-                String text = msgController.chatMessageHolder.value.value[index].text;
+                final String userName = msgController
+                        .chatMessageHolder /*.value .value*/ [index]
+                        .sender
+                        .name +
+                    "\n";
+                String text = msgController
+                    .chatMessageHolder.value /*.value*/ [index].text;
                 return Container(
                   margin: const EdgeInsets.only(top: 10),
                   child: Column(
@@ -55,14 +62,25 @@ class Conversation extends StatelessWidget {
                             : MainAxisAlignment.start,
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
+                          // if (!isMe)
                           if (!isMe)
                             CircleAvatar(
-                              radius: 15,
-                              backgroundImage: AssetImage(user.avatar),
+                              radius: 10,
+                              backgroundColor: MyTheme.kBgColor,
+                              child: Image.asset(
+                                isMe
+                                    ? currentUser.avatar
+                                    : message.sender.avatar,
+                                scale: 0.5,
+                                height: 16,
+                                width: 16,
+                              ),
                             ),
-                          const SizedBox(
-                            width: 10,
-                          ),
+                          if (!isMe)
+                            const SizedBox(
+                              width: 10,
+                            ),
+
                           Container(
                               padding: const EdgeInsets.all(10),
                               constraints: BoxConstraints(
@@ -70,8 +88,8 @@ class Conversation extends StatelessWidget {
                                       MediaQuery.of(context).size.width * 0.6),
                               decoration: BoxDecoration(
                                   color: isMe
-                                      ? MyTheme.kAccentColor
-                                      : Colors.grey[200],
+                                      ? MyTheme.kWhite
+                                      : MyTheme.kBlueShade,
                                   borderRadius: BorderRadius.only(
                                     topLeft: const Radius.circular(16),
                                     topRight: const Radius.circular(16),
@@ -85,23 +103,41 @@ class Conversation extends StatelessWidget {
                                     color: Colors.black,
                                   ),
                                   children: <TextSpan>[
-                                    TextSpan(
+                                    /*TextSpan(
                                         text: userName,
                                         style: MyTheme.bodyTextMessage.copyWith(
                                             color: isMe
-                                                ? Colors.white
-                                                : Colors.grey[800],
-                                            fontWeight: FontWeight.bold)),
+                                                ? MyTheme.kDarkGrey
+                                                : MyTheme.kWhite,
+                                            fontWeight: FontWeight.bold)),*/
                                     TextSpan(
                                         text: text,
-                                        style: MyTheme.bodyTextMessage.copyWith(
+                                        style:
+                                            MyTheme.chatConversation.copyWith(
                                           color: isMe
-                                              ? Colors.white
-                                              : Colors.grey[800],
+                                              ? MyTheme.kDarkGrey
+                                              : MyTheme.kWhite,
                                         )),
                                   ],
                                 ),
                               )),
+                          if (isMe)
+                            const SizedBox(
+                              width: 10,
+                            ),
+                          if (isMe)
+                            CircleAvatar(
+                              radius: 10,
+                              backgroundColor: MyTheme.kBgColor,
+                              child: Image.asset(
+                                isMe
+                                    ? currentUser.avatar
+                                    : message.sender.avatar,
+                                scale: 0.5,
+                                height: 16,
+                                width: 16,
+                              ),
+                            ),
                         ],
                       ),
                       Padding(
@@ -115,17 +151,17 @@ class Conversation extends StatelessWidget {
                               const SizedBox(
                                 width: 40,
                               ),
-                            Icon(
-                              Icons.done_all,
-                              size: 20,
-                              color: MyTheme.bodyTextTime.color,
-                            ),
-                            const SizedBox(
-                              width: 8,
-                            ),
+                            /* Icon(
+                                  Icons.done_all,
+                                  size: 20,
+                                  color: MyTheme.bodyTextTime.color,
+                                ),
+                                const SizedBox(
+                                  width: 8,
+                                ),*/
                             Text(
                               message.time,
-                              style: MyTheme.bodyTextTime,
+                              style: MyTheme.chatTime,
                             )
                           ],
                         ),

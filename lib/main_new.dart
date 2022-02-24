@@ -21,7 +21,7 @@ Bottomsheet with chips
  */
 
 void main() {
-  runApp(const RestorationScope(restorationId: 'root', child:  MyApp()));
+  runApp(const /*RestorationScope(restorationId: 'root', child:  */MyApp())/*)*/;
 }
 
 class MyApp extends StatelessWidget {
@@ -32,6 +32,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetMaterialApp(
       title: 'SuMed PoC',
+        // restorationScopeId: 'app',
       theme: ThemeData(
         // primaryColor: MyTheme.kPrimaryColor,
         // accentColor: MyTheme.kAccentColor,

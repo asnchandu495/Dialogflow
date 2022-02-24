@@ -17,7 +17,7 @@ final allUserList = [_jack, _addison, _angel, _deanna];
 final User _jack = User(id: 0, name: 'Jack', avatar: 'assets/images/user.png');
 
 final User botSuMed =
-    User(id: 110, name: 'SuMed', avatar: 'assets/images/bot.jpg');
+    User(id: 110, name: 'SuMed', avatar: 'assets/images/bot.png');
 
 final User _addison =
     User(id: 1, name: 'Addison', avatar: 'assets/images/user.png');

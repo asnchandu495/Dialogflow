@@ -207,7 +207,7 @@ class _ChatroomState extends State<Chatroom> {
         spacing: 6.0,
         runSpacing: 6.0,
         children: values.map((value) {
-          return buildChip(value, const Color(0xFFff6666), (selectedValue) {
+          return buildChip(value, false, (selectedValue) {
             onSelected(selectedValue);
             // Navigator.pop(context);
           });

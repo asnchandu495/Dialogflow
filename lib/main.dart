@@ -1,4 +1,3 @@
-import 'package:awesome_select/awesome_select.dart';
 import 'package:dialog_flowtter/dialog_flowtter.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -231,7 +230,7 @@ class _MyHomePageState extends State<MyHomePage> {
         spacing: 6.0,
         runSpacing: 6.0,
         children: values.map((value) {
-          return buildChip(value, const Color(0xFFff6666), (selectedValue) {
+          return buildChip(value, true, (selectedValue) {
             onSelected(selectedValue);
             // Navigator.pop(context);
           });

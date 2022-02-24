@@ -146,9 +146,9 @@ final List<Message> allChats = [
 ];*/
 
 class MessageController extends GetxController {
-  // final RxList<Message> messages = RxList([]);
-  final Rx<ChatMessageHolder> chatMessageHolder =
-  Rx<ChatMessageHolder>(ChatMessageHolder());
+  final RxList<Message> chatMessageHolder = RxList([]);
+  // final Rx<ChatMessageHolder> chatMessageHolder =
+  // Rx<ChatMessageHolder>(ChatMessageHolder());
 
 /*@override
   void onInit() {

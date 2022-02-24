@@ -3,13 +3,18 @@ import 'package:google_fonts/google_fonts.dart';
 
 class MyTheme {
   MyTheme._();
-  static Color kPrimaryColor = const Color(0xff7C7B9B);
+
+  static Color kWhite = const Color(0xffFFFFFF);
   static Color kPrimaryColorVariant = const Color(0xff686795);
-  static Color kAccentColor = const Color(0xffFCAAAB);
+  static Color kRedish = const Color(0xffDE1B54);
   static Color kAccentColorVariant = const Color(0xffF7A3A2);
   static Color kUnreadChatBG = const Color(0xffEE1D1D);
-
-  static final TextStyle kAppTitle = GoogleFonts.grandHotel(fontSize: 36);
+  static Color kBgColor = const Color(0xffE5E5E5);
+  static Color kAppbarColor = const Color(0xffFFFFFF);
+  static const  Color kBlueShade =  Color(0xFF26235D);
+  static const Color kDarkGrey = Color(0xFF2A2A2A);
+  static const Color kChatTimeColor = Color(0xFF5C5C5C);
+  static final TextStyle kAppTitle = GoogleFonts.roboto(fontSize: 36);
 
   static const TextStyle heading2 = TextStyle(
     color: Color(0xff686795),
@@ -19,12 +24,11 @@ class MyTheme {
   );
 
   static const TextStyle chatSenderName = TextStyle(
-    color: Colors.white,
-    fontSize: 24,
-    fontWeight: FontWeight.bold,
-    letterSpacing: 1.5,
-  );
+    color: MyTheme.kBlueShade,
+    fontSize: 16,
+    fontWeight: FontWeight.w700,
 
+  );
 
   static MaterialColor createMaterialColor(Color color) {
     List strengths = <double>[.05];
@@ -45,6 +49,16 @@ class MyTheme {
     }
     return MaterialColor(color.value, swatch);
   }
+  // background: #5C5C5C;
+  static const TextStyle chatTime = TextStyle(
+      color: MyTheme.kChatTimeColor,
+      fontSize: 12,
+      fontWeight: FontWeight.w400);
+
+  static const TextStyle chatConversation = TextStyle(
+      color: MyTheme.kChatTimeColor,
+      fontSize: 14,
+      fontWeight: FontWeight.w400);
 
   static const TextStyle bodyText1 = TextStyle(
       color: Color(0xffAEABC9),

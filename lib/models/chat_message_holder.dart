@@ -40,7 +40,8 @@ class ChatMessageHolder extends RestorableValue<Map<String, List<Message>>> {
 
 class ChatMessageHolder extends RestorableValue<RxList<Message>> {
   @override
-  RxList<Message> createDefaultValue() => RxList();
+  RxList<Message> createDefaultValue() =>
+      value.isEmpty ? RxList<Message>() : value;
 
   @override
   void didUpdateValue(RxList<Message>? oldValue) {

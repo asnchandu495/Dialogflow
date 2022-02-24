@@ -1,21 +1,23 @@
-import 'package:awesome_select/awesome_select.dart';
+// import 'package:awesome_select/awesome_select.dart';
 import 'package:dialog_flowtter/dialog_flowtter.dart' as dialogFlow;
-import 'package:dialog_flowtter/dialog_flowtter.dart';
+
 import 'package:direct_select_flutter/direct_select_container.dart';
 import 'package:direct_select_flutter/direct_select_item.dart';
 import 'package:direct_select_flutter/direct_select_list.dart';
-import 'package:flutter/scheduler.dart';
+import 'package:flutter/cupertino.dart';
+
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_instance/src/extension_instance.dart';
 import 'package:get/get_rx/src/rx_types/rx_types.dart';
 import 'package:intl/intl.dart';
+import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:numberpicker/numberpicker.dart';
-import 'package:sumed/customfunctionality/chat_composer.dart';
+
 import 'package:sumed/customfunctionality/conversation.dart';
 import 'package:sumed/customfunctionality/drop_down_list_model.dart';
-import 'package:sumed/customfunctionality/select_drop_down_list.dart';
-import 'package:sumed/models/chat_message_holder.dart';
+import 'package:sumed/customfunctionality/generate_chip.dart';
+
 import 'package:sumed/models/custom_payload.dart';
 import 'package:sumed/models/message_model.dart' as appMessage;
 import 'package:sumed/models/message_model.dart';
@@ -24,6 +26,7 @@ import 'package:sumed/models/value_holder.dart';
 import '../app_theme.dart';
 import 'package:flutter/material.dart';
 import '../models/user_model.dart';
+import '../customfunctionality/generate_chip.dart';
 
 /*
 Layout type
@@ -42,20 +45,23 @@ class ChatRoom extends StatefulWidget {
   final User user;
 }
 
-class _ChatRoomState extends State<ChatRoom> with RestorationMixin {
+class _ChatRoomState extends State<ChatRoom> /*with RestorationMixin*/ {
   late dialogFlow.DialogFlowtter dialogFlowtter;
   var msgController = Get.put(MessageController());
-  var isBottomSheetShow = false.obs;
+
+  // var isBottomSheetShow = false.obs;
   var bottomSheetTitle = "".obs;
   final RxList<String> _bottomSheetValueSelection = RxList();
   final RxList<String> _multipleValueQueue = RxList();
 
-  final RxList<S2Choice<String>> _choiceValues = RxList();
+  final RxList<S2Choice> _choiceValues = RxList();
   bool _isSingleSelection = false;
   int _layoutType = 0;
   bool _isForName = false;
 
   final RxBool _isWaitForAnotherMessage = false.obs;
+  final RxString _timeUnitSelected = ''.obs;
+  final RxString _timeValueSelected = ''.obs;
 
   @override
   void initState() {
@@ -65,16 +71,18 @@ class _ChatRoomState extends State<ChatRoom> with RestorationMixin {
       dialogFlowtter = instance;
       Future.delayed(const Duration(seconds: 1), () {
         _checkForMessage("Hello");
+      });
 
+      Future.delayed(const Duration(seconds: 2), () {
         if (allUserList.isNotEmpty) {
           for (var element in allUserList) {
-            _choiceValues
-                .add(S2Choice(title: element.name, value: element.name));
+            _choiceValues.add(S2Choice(label: element.name));
           }
           _isSingleSelection = true;
           _isForName = true;
-          isBottomSheetShow.value = true;
+          // isBottomSheetShow.value = true;
           bottomSheetTitle.value = "Select patient name";
+          _showSingleSelectionChipsWithBottomSheet(true);
         }
       });
     });
@@ -175,6 +183,7 @@ class _ChatRoomState extends State<ChatRoom> with RestorationMixin {
         _multipleValueQueue.close();
       }
     }
+    _botStatus.value = _online;
   }
 
   Future<void> _addMessage(dialogFlow.Message message,
@@ -188,14 +197,14 @@ class _ChatRoomState extends State<ChatRoom> with RestorationMixin {
       if (values.isNotEmpty) {
         for (var element in values) {
           _choiceValues.add(S2Choice(
-              title: element,
-              value: element,
+              label: element,
               meta: _layoutType == 2 && options.isNotEmpty
                   ? options[element]
                   : ""));
         }
-        isBottomSheetShow.value = true;
+        // isBottomSheetShow.value = true;
         bottomSheetTitle.value = textToDisplay;
+        _determineInputLayout();
       }
     } else {
       textToDisplay = message.text!.text![0].toString();
@@ -213,6 +222,7 @@ class _ChatRoomState extends State<ChatRoom> with RestorationMixin {
   Future<void> _sendMessage(String text) async {
     if (text.isEmpty) return;
 
+    _botStatus.value = _typing;
     await Future.delayed(const Duration(milliseconds: 500), () {
       _addMessage(
         dialogFlow.Message(text: dialogFlow.DialogText(text: [text])),
@@ -229,42 +239,50 @@ class _ChatRoomState extends State<ChatRoom> with RestorationMixin {
         DateTime.now().millisecondsSinceEpoch));
   }
 
+  final String _online = 'Online';
+  final String _typing = 'Typing...';
+  final RxString _botStatus = ''.obs;
+
   @override
   Widget build(BuildContext context) {
+    _botStatus.value = _typing;
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: MyTheme.kAppbarColor,
         centerTitle: false,
         title: Row(
           children: [
             CircleAvatar(
-              radius: 24,
-              backgroundImage: AssetImage(
-                widget.user.avatar,
-              ),
-            ),
+                radius: 24,
+                backgroundColor: MyTheme.kAppbarColor,
+                child: Image.asset(
+                    widget.user.avatar) /*,
+              backgroundImage: ,*/
+                ),
             const SizedBox(
               width: 20,
             ),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
                   widget.user.name,
-                  style: MyTheme.chatSenderName.copyWith(color: Colors.white),
+                  style: MyTheme.chatSenderName,
                 ),
-                Text(
-                  'online',
-                  style: MyTheme.bodyText1
-                      .copyWith(fontSize: 18, color: Colors.white),
-                ),
+                Obx(() {
+                  return Text(
+                    _botStatus.value,
+                    style: MyTheme.chatTime,
+                  );
+                }),
               ],
             ),
           ],
         ),
         elevation: 4,
       ),
-      // backgroundColor: MyTheme.kPrimaryColor,
+      backgroundColor: MyTheme.kBgColor,
       body: GestureDetector(
         onTap: () {
           FocusScope.of(context).unfocus();
@@ -272,55 +290,29 @@ class _ChatRoomState extends State<ChatRoom> with RestorationMixin {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            Container(
-                margin: const EdgeInsets.symmetric(vertical: 10),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-                decoration: BoxDecoration(
-                    color: MyTheme.kPrimaryColorVariant,
-                    borderRadius: const BorderRadius.all(Radius.circular(12))),
-                child: Text(_getTodayValue(),
-                    style: MyTheme.bodyTextTime.copyWith(
-                      color: Colors.white,
-                    ))),
             Expanded(
               child: Container(
+                color: MyTheme.kBgColor,
                 padding: const EdgeInsets.symmetric(horizontal: 20),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                ),
-                child: ClipRRect(
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(30),
-                    topRight: Radius.circular(30),
-                  ),
-                  child: Conversation(user: widget.user),
-                ),
+                child: Conversation(user: widget.user),
               ),
             ),
-            Obx(() => Visibility(
+            /*Obx(() => Visibility(
                 visible: !(isBottomSheetShow.value),
-                child: buildChatComposer())),
-            Obx(() => Visibility(
+                child:*/
+            buildChatComposer() /*))*/,
+            /*Obx(() => Visibility(
                   visible: isBottomSheetShow.value,
-                  child: _getInputLayout(),
-                  /*child: _isSingleSelection
-                      ? _smartChipSelectForSingle(_isForName)
-                      : _smartSelect(),*/
-                ))
+                  child: _determineInputLayout(),
+                ))*/
           ],
         ),
       ),
     );
   }
 
-  RxString timeUnitSelected = ''.obs;
-  RxString timeValueSelected = ''.obs;
-
+/*
   formedAForm() {
-    // Rx<OptionItem> timeUnitSelected = Rx(OptionItem(id: '', title: ''));
-
-    // Rx<OptionItem> timeValueSelected = Rx(OptionItem(id: '', title: ''));
     String valueForSecondComponent = '';
     String valueForThirdComponent = '';
     String valueForFirstComponent = '';
@@ -379,13 +371,12 @@ class _ChatRoomState extends State<ChatRoom> with RestorationMixin {
                                             maxLines: 2,
                                             overflow: TextOverflow.visible,
                                             style: MyTheme.heading2.copyWith(
-                                              color: MyTheme.kPrimaryColor,
+                                              color: MyTheme.kWhite,
                                             ),
                                           ),
                                           const SizedBox(height: 5),
                                           Obx(() => ToggleButtons(
-                                                selectedColor:
-                                                    MyTheme.kAccentColor,
+                                                selectedColor: MyTheme.kRedish,
                                                 // fillColor: Colors.white,
                                                 children: options.temperature!
                                                     .map<Widget>((s) => Padding(
@@ -397,8 +388,8 @@ class _ChatRoomState extends State<ChatRoom> with RestorationMixin {
                                                           style: MyTheme
                                                               .heading2
                                                               .copyWith(
-                                                            color: MyTheme
-                                                                .kPrimaryColor,
+                                                            color:
+                                                                MyTheme.kWhite,
                                                           ),
                                                         )))
                                                     .toList(),
@@ -453,13 +444,13 @@ class _ChatRoomState extends State<ChatRoom> with RestorationMixin {
                                               maxLines: 2,
                                               overflow: TextOverflow.visible,
                                               style: MyTheme.heading2.copyWith(
-                                                color: MyTheme.kPrimaryColor,
+                                                color: MyTheme.kWhite,
                                               ),
                                             ),
                                             const SizedBox(height: 5),
                                             Obx(() => ToggleButtons(
                                                   selectedColor:
-                                                      MyTheme.kAccentColor,
+                                                      MyTheme.kRedish,
                                                   // fillColor: Colors.white,
                                                   children: options.temperature!
                                                       .map<Widget>((s) =>
@@ -473,7 +464,7 @@ class _ChatRoomState extends State<ChatRoom> with RestorationMixin {
                                                                     .heading2
                                                                     .copyWith(
                                                                   color: MyTheme
-                                                                      .kPrimaryColor,
+                                                                      .kWhite,
                                                                 ),
                                                               )))
                                                       .toList(),
@@ -527,7 +518,7 @@ class _ChatRoomState extends State<ChatRoom> with RestorationMixin {
                                       maxLines: 2,
                                       overflow: TextOverflow.visible,
                                       style: MyTheme.heading2.copyWith(
-                                        color: MyTheme.kPrimaryColor,
+                                        color: MyTheme.kWhite,
                                       ),
                                     ),
                                     const SizedBox(height: 5),
@@ -548,14 +539,16 @@ class _ChatRoomState extends State<ChatRoom> with RestorationMixin {
                                                 label: title ?? '',
                                                 onSelectedValue:
                                                     (selectedValue) {
-                                                  timeValueSelected.value =
+                                                  _timeValueSelected.value =
                                                       selectedValue;
                                                   initialValueForNumeric.value =
                                                       int.parse(selectedValue);
                                                 },
                                               ));
                                         }),
-                                        /*Obx(() => */
+                                        */
+/*Obx(() => */ /*
+
                                         Flexible(
                                             fit: FlexFit.loose,
                                             flex: 1,
@@ -567,19 +560,21 @@ class _ChatRoomState extends State<ChatRoom> with RestorationMixin {
                                               onSelectedValue: (selectedValue) {
                                                 initialValueForString =
                                                     selectedValue;
-                                                timeUnitSelected.value =
+                                                _timeUnitSelected.value =
                                                     selectedValue;
                                                 valueForFirstComponent =
                                                     "$title details \n";
                                                 numericalValues.value =
                                                     _determineDropDownValueForTimeUnit(
-                                                        timeUnitSelected.value,
+                                                        _timeUnitSelected.value,
                                                         _choiceValues[index]
                                                             .meta);
                                                 initialValueForNumeric.value =
                                                     numericalValues[0];
                                               },
-                                            )) /*)*/
+                                            )) */
+/*)*/ /*
+
                                       ],
                                     ),
                                   ],
@@ -599,8 +594,8 @@ class _ChatRoomState extends State<ChatRoom> with RestorationMixin {
             minWidth: double.infinity,
             child: FlatButton(
               child: Text('Submit (${state.selection?.length})'),
-              color: MyTheme.createMaterialColor(MyTheme.kPrimaryColor),
-              textColor: MyTheme.kAccentColor,
+              color: MyTheme.createMaterialColor(MyTheme.kWhite),
+              textColor: MyTheme.kRedish,
               onPressed: () async {
                 ValueHolderForBot holderForBot = ValueHolderForBot();
 
@@ -669,8 +664,10 @@ class _ChatRoomState extends State<ChatRoom> with RestorationMixin {
         bool containsExtraComma = valueToSend.endsWith(",");
         if (containsExtraComma) {
           valueToSend = valueToSend.substring(0, valueToSend.length - 1);
-          /*valueToSend = valueToSend.replaceRange(
-              valueToSend.length - 1, valueToSend.length - 1, '');*/
+          */
+/*valueToSend = valueToSend.replaceRange(
+              valueToSend.length - 1, valueToSend.length - 1, '');*/ /*
+
         }
 
         print(
@@ -683,13 +680,13 @@ class _ChatRoomState extends State<ChatRoom> with RestorationMixin {
         _choiceValues.clear();
       },
       choiceItems: _choiceValues,
-      choiceActiveStyle: S2ChoiceStyle(highlightColor: MyTheme.kAccentColor),
+      choiceActiveStyle: S2ChoiceStyle(highlightColor: MyTheme.kRedish),
       choiceConfig: S2ChoiceConfig(
         type: S2ChoiceType.chips,
         activeStyle: S2ChoiceStyle(
             control: S2ChoiceControl.leading,
-            highlightColor: MyTheme.kAccentColor,
-            accentColor: MyTheme.kAccentColor,
+            highlightColor: MyTheme.kRedish,
+            accentColor: MyTheme.kRedish,
             raised: true),
         layout: S2ChoiceLayout.grid,
         padding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
@@ -721,8 +718,8 @@ class _ChatRoomState extends State<ChatRoom> with RestorationMixin {
             minWidth: double.infinity,
             child: FlatButton(
               child: Text('Submit (${state.selection?.length})'),
-              color: MyTheme.createMaterialColor(MyTheme.kPrimaryColor),
-              textColor: MyTheme.kAccentColor,
+              color: MyTheme.createMaterialColor(MyTheme.kWhite),
+              textColor: MyTheme.kRedish,
               onPressed: (state.selection?.isValid ?? true)
                   ? () => state.closeModal(confirmed: true)
                   : null,
@@ -754,13 +751,13 @@ class _ChatRoomState extends State<ChatRoom> with RestorationMixin {
         _isSingleSelection = false;
       },
       choiceItems: _choiceValues,
-      choiceActiveStyle: S2ChoiceStyle(highlightColor: MyTheme.kAccentColor),
+      choiceActiveStyle: S2ChoiceStyle(highlightColor: MyTheme.kRedish),
       choiceConfig: S2ChoiceConfig(
         type: S2ChoiceType.chips,
         activeStyle: S2ChoiceStyle(
             control: S2ChoiceControl.leading,
-            highlightColor: MyTheme.kAccentColor,
-            accentColor: MyTheme.kAccentColor,
+            highlightColor: MyTheme.kRedish,
+            accentColor: MyTheme.kRedish,
             raised: true),
         layout: S2ChoiceLayout.grid,
         padding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
@@ -781,32 +778,34 @@ class _ChatRoomState extends State<ChatRoom> with RestorationMixin {
 
     return sele;
   }
+*/
 
-  Container buildChatComposer() {
+  Widget buildChatComposer() {
     final TextEditingController chatController = TextEditingController();
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      color: Colors.white,
-      height: 100,
+      padding: const EdgeInsets.all(4),
+      color: MyTheme.kWhite,
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Expanded(
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14),
               height: 60,
+              // color:MyTheme.kWhite,
               decoration: BoxDecoration(
-                color: Colors.grey[200],
-                borderRadius: BorderRadius.circular(30),
+                color: MyTheme.kWhite,
+                borderRadius: BorderRadius.circular(10),
               ),
               child: Row(
                 children: [
-                  Icon(
+                  /*Icon(
                     Icons.emoji_emotions_outlined,
                     color: Colors.grey[500],
                   ),
                   const SizedBox(
                     width: 10,
-                  ),
+                  ),*/
                   Expanded(
                     child: TextField(
                       controller: chatController,
@@ -826,24 +825,35 @@ class _ChatRoomState extends State<ChatRoom> with RestorationMixin {
             ),
           ),
           const SizedBox(
-            width: 16,
+            width: 4,
           ),
-          FloatingActionButton(
-            onPressed: () {
-              _sendMessage(chatController.text);
-              chatController.clear();
-            },
-            backgroundColor: MyTheme.kAccentColor,
-            child: const Icon(
-              Icons.send,
-              color: Colors.white,
-            ),
-          ),
+          Container(
+            color: MyTheme.kRedish,
+            height: 40,
+            child: /* ClipRRect(
+
+                borderRadius: const BorderRadius.all(Radius.circular(30)),
+                child:*/
+                IconButton(
+              icon: const Icon(
+                Icons.send,
+                color: Colors.white,
+              ),
+              onPressed: () {
+                _sendMessage(chatController.text);
+                chatController.clear();
+              },
+
+              /*style: ButtonStyle(
+              backgroundColor: MaterialStateProperty.all<Color>(MyTheme.kAccentColor),
+            )*/
+              // backgroundColor: MyTheme.kAccentColor,
+            ) /*)*/,
+          )
         ],
       ),
     );
   }
-
 
   // final Map<String, List<appMessage.Message>> _allMessages = {};
   // final List<appMessage.Message> _userMessage = [];
@@ -858,7 +868,7 @@ class _ChatRoomState extends State<ChatRoom> with RestorationMixin {
         isRead: true,
         unreadCount: 0);
 
- /*   if (isUserMessage) {
+    /*   if (isUserMessage) {
       _userMessage.add(appMsgs);
 
       _allMessages['user'] = _userMessage;
@@ -867,38 +877,30 @@ class _ChatRoomState extends State<ChatRoom> with RestorationMixin {
       _allMessages['bot'] = _botMessage;
     }*/
 
-
     /*msgController.chatMessageHolder.listen((p0) {
 
       p0.value;
     });*/
     // msgController.messages.add(appMsgs);
 
-    msgController.chatMessageHolder.value.value.add(appMsgs);
+    msgController.chatMessageHolder /*.value .value*/ .add(appMsgs);
   }
 
-  Widget _getInputLayout() {
+  _determineInputLayout() {
     switch (_layoutType) {
       case 1:
         //patch to overcome value assign of selection
-        return _smartSelect(true);
-      case 2:
-        return formedAForm();
+        _showMultiSelectionChipsWithBottomSheet(true);
+        break;
+      /*case 2:
+        return formedAForm();*/
       case 0:
       default:
-        return _smartChipSelectForSingle(_isForName);
+        _showSingleSelectionChipsWithBottomSheet(_isForName);
+        break;
     }
   }
 
-  /*DropListModel _determineDropDownValueForTimeUnit(OptionItem value, meta) {
-    if (value.title.toLowerCase() == "month") {
-      return getMonthValue(meta);
-    } else if (value.title.toLowerCase() == "weeks") {
-      return getWeeksValue(meta);
-    } else {
-      return getDaysValue(meta);
-    }
-  }*/
   List<int> _determineDropDownValueForTimeUnit(String value, meta) {
     if (value.toLowerCase() == "month") {
       return getMonthValue(meta);
@@ -927,14 +929,110 @@ class _ChatRoomState extends State<ChatRoom> with RestorationMixin {
         });
   }
 
-  @override
-  // TODO: implement restorationId
+  _showSingleSelectionChipsWithBottomSheet(bool isForName) {
+    showMaterialModalBottomSheet(
+      expand: false,
+      isDismissible: false,
+      enableDrag: false,
+      context: context,
+      backgroundColor: MyTheme.kBgColor,
+      builder: (context) => Material(
+        child: SafeArea(
+            top: false,
+            child: ChipsFilter(
+              filters: _choiceValues,
+              title: bottomSheetTitle.value,
+              isSingleSelection: true,
+              selectedValueCallback: (selectedValueList) {
+                var selectedValue = selectedValueList[0];
+                _sendMessage(selectedValue);
+                if (_isForName) {
+                  currentUser = allUserList
+                      .firstWhere((element) => element.name == selectedValue);
+                  _isForName = false;
+                }
+                _bottomSheetValueSelection.clear();
+                // isBottomSheetShow.value = false;
+                _choiceValues.clear();
+              },
+            )),
+      ),
+    );
+  }
+
+  _showMultiSelectionChipsWithBottomSheet(isForProblems) {
+    showMaterialModalBottomSheet(
+      expand: false,
+      isDismissible: false,
+      enableDrag: false,
+      context: context,
+      // backgroundColor: Colors.transparent,
+      builder: (context) => Material(
+        child: SafeArea(
+            top: false,
+            child: ChipsFilter(
+              filters: _choiceValues,
+              title: bottomSheetTitle.value,
+              isSingleSelection: false,
+              selectedValueCallback: (selectedValueList) {
+                _bottomSheetValueSelection.value = selectedValueList;
+                if (isForProblems) {
+                  _multipleValueQueue.clear();
+                  _multipleValueQueue.addAll(_bottomSheetValueSelection);
+                  isForProblems = false;
+                  _initQueueSendingMessage();
+                  _isWaitForAnotherMessage.value = true;
+
+                  // multipleValueQueue.listen((values) { values.forEach((element) { })});
+                }
+                var valueToSend = "";
+                for (var element in selectedValueList) {
+                  if (selectedValueList.length == 1) {
+                    valueToSend = element;
+                  } else {
+                    valueToSend += element + ",";
+                  }
+                }
+
+                bool containsExtraComma = valueToSend.endsWith(",");
+                if (containsExtraComma) {
+                  valueToSend =
+                      valueToSend.substring(0, valueToSend.length - 1);
+                }
+
+                print(
+                    "SELECTED VALUES = ${_bottomSheetValueSelection.value.toString()}");
+
+                // sendMessage(valueToSend);
+                _addMessageToConversation(true, valueToSend);
+                _bottomSheetValueSelection.clear();
+                // isBottomSheetShow.value = false;
+                _choiceValues.clear();
+              },
+            )
+            /*    Wrap(
+                        spacing: 6.0,
+                        runSpacing: 6.0,
+                        children: _choiceValues.map((value) {
+                          return buildChip(
+                              value.label, const Color(0xFFff6666),
+                              (selectedValue) {
+                            // onSelected(selectedValue);
+                            // Navigator.pop(context);
+                          });
+                        }).toList())*/
+            ),
+      ),
+    );
+  }
+
+/*@override
   String? get restorationId => 'chat_room';
 
   @override
   void restoreState(RestorationBucket? oldBucket, bool initialRestore) {
     registerForRestoration(msgController.chatMessageHolder.value, 'chat_conversation');
-  }
+  }*/
 }
 
 class StringValueSelector extends StatelessWidget {
