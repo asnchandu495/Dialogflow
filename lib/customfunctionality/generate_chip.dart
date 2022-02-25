@@ -34,7 +34,7 @@ class ChipsFilter extends StatelessWidget {
 
   ChipsFilter(
       {Key? key,
-        required this.title,
+      required this.title,
       required this.filters,
       required this.isSingleSelection,
       required this.selectedValueCallback})
@@ -59,12 +59,21 @@ class ChipsFilter extends StatelessWidget {
               scrollDirection: Axis.horizontal,*/ /*
             ),
           ),*/
-          Text(title,style: MyTheme.chatSenderName),
+          Align(
+              alignment: Alignment.topLeft,
+              child: Padding(
+                  padding: const EdgeInsets.all(5),
+                  child: Text(title, style: MyTheme.chatSenderName)))
+          /*Padding(
+              padding: const EdgeInsets.fromLTRB(15, 5, 5, 15),
+              child: Text(title, style: MyTheme.chatSenderName))*/
+          ,
           Wrap(
             spacing: 6.0,
             runSpacing: 6.0,
             direction: Axis.horizontal,
             alignment: WrapAlignment.start,
+            clipBehavior: Clip.antiAliasWithSaveLayer,
             children: filters
                 .map((e) =>
                     buildChip(e.label, isSingleSelection, (selectedValue) {
@@ -86,28 +95,32 @@ class ChipsFilter extends StatelessWidget {
               visible: !isSingleSelection,
               child: SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    if (selectedValues.isNotEmpty) {
-                      _fireAndExistScreen();
-                    } else {
-                      return;
-                    }
-                  },
-                  style: ButtonStyle(
-                    backgroundColor: MaterialStateProperty.all(MyTheme.kRedish)
-                  ),
-                  child: Text(
-                    'Submit',
-                    style:
-                        MyTheme.chatSenderName.copyWith(color: MyTheme.kWhite),
-                  ),
-                ),
+                child: Padding(
+                    padding: const EdgeInsets.all(5),
+                    child: ButtonTheme(
+                        minWidth: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            if (selectedValues.isNotEmpty) {
+                              _fireAndExistScreen();
+                            } else {
+                              return;
+                            }
+                          },
+                          style: ButtonStyle(
+                              backgroundColor:
+                                  MaterialStateProperty.all(MyTheme.kRedish)),
+                          child: Text(
+                            'Submit',
+                            style: MyTheme.chatSenderName
+                                .copyWith(color: MyTheme.kWhite),
+                          ),
+                        ))),
               ))
         ]);
   }
 
-  _fireAndExistScreen(){
+  _fireAndExistScreen() {
     selectedValueCallback.call(selectedValues);
     Get.back();
   }
@@ -178,11 +191,6 @@ Widget buildChip(
   var _isSelected = false.obs;
   return Obx(() => FilterChip(
         padding: const EdgeInsets.all(4.0),
-
-        /*avatar: CircleAvatar(
-      backgroundColor: Colors.pink.shade600,
-      child: const Text('FD'),
-    ),*/
         label: Text(
           label,
           style: MyTheme.chatConversation.copyWith(
@@ -198,11 +206,6 @@ Widget buildChip(
         onSelected: (bool selected) {
           _isSelected.value = selected;
           onSelection.call(label);
-          // Navigator.pop(context);
-          /* if(selected) {
-        onSelection.call(label);
-        Get.back();
-      }*/
         },
         /*onDeleted: () {
     },*/
@@ -226,4 +229,20 @@ Widget buildChip(
     shadowColor: Colors.grey[60],
     padding: EdgeInsets.all(8.0),
   );*/
+}
+
+Widget getTabWidget(String title, bool isTabSelected) {
+  return isTabSelected
+      ? Container(
+          width: double.infinity,
+          height: double.infinity,
+          color: MyTheme.kBlueShade,
+          child: Center(
+              child: Text(title,
+                  style: MyTheme.chatConversation
+                      .copyWith(color: MyTheme.kWhite))))
+      : Text(
+          title,
+          style: MyTheme.chatConversation,
+        );
 }

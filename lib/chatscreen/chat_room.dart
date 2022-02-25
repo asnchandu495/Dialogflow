@@ -892,8 +892,9 @@ class _ChatRoomState extends State<ChatRoom> /*with RestorationMixin*/ {
         //patch to overcome value assign of selection
         _showMultiSelectionChipsWithBottomSheet(true);
         break;
-      /*case 2:
-        return formedAForm();*/
+      case 2:
+        _showDynamicUiBottomSheet();
+        break;
       case 0:
       default:
         _showSingleSelectionChipsWithBottomSheet(_isForName);
@@ -961,8 +962,8 @@ class _ChatRoomState extends State<ChatRoom> /*with RestorationMixin*/ {
   }
 
   _showMultiSelectionChipsWithBottomSheet(isForProblems) {
-    showMaterialModalBottomSheet(
-      expand: false,
+    showModalBottomSheet(
+      // expand: false,
       isDismissible: false,
       enableDrag: false,
       context: context,
@@ -1009,19 +1010,324 @@ class _ChatRoomState extends State<ChatRoom> /*with RestorationMixin*/ {
                 // isBottomSheetShow.value = false;
                 _choiceValues.clear();
               },
-            )
-            /*    Wrap(
-                        spacing: 6.0,
-                        runSpacing: 6.0,
-                        children: _choiceValues.map((value) {
-                          return buildChip(
-                              value.label, const Color(0xFFff6666),
-                              (selectedValue) {
-                            // onSelected(selectedValue);
-                            // Navigator.pop(context);
-                          });
-                        }).toList())*/
+            )),
+      ),
+    );
+  }
+
+  _showDynamicUiBottomSheet() {
+    String valueForSecondComponent = '';
+    String valueForThirdComponent = '';
+    String valueForFirstComponent = '';
+    RxInt initialValueForNumeric = 0.obs;
+    var initialValueForString;
+    RxList<bool> isSelectedForSecondOption =
+        RxList(List.generate(3, (index) => false));
+    RxList<bool> isSelectedForThirdOption =
+        RxList(List.generate(2, (index) => false));
+    showModalBottomSheet(
+      isScrollControlled: false,
+      isDismissible: false,
+      enableDrag: false,
+      context: context,
+      builder: (context) => Column(
+        children: [
+          Align(
+              alignment: Alignment.topLeft,
+              child: Padding(
+                  padding: const EdgeInsets.all(5),
+                  child: Text(bottomSheetTitle.value,
+                      style: MyTheme.chatSenderName))),
+          ListView.builder(
+              shrinkWrap: true,
+              itemCount: _choiceValues.length,
+              itemBuilder: (context, index) {
+                switch (index) {
+                  case 1:
+                    {
+                      var title = _choiceValues[index].label;
+
+                      Options options = _choiceValues[index].meta as Options;
+                      isSelectedForSecondOption = RxList(List.generate(
+                          options.temperature!.length, (index) => false));
+
+                      return Container(
+                          padding: const EdgeInsets.all(7),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.max,
+                            children: [
+
+                              Align(
+                                  alignment: Alignment.topLeft,
+                                  child: Text(title,
+                                        textAlign: TextAlign.center,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.visible,
+                                        style: MyTheme.chatConversation,)),
+                              const SizedBox(height: 5),
+                              LayoutBuilder(builder: (context, constraints) {
+                                return Obx(() => ToggleButtons(
+                                      constraints: BoxConstraints.expand(
+                                          width: (constraints.maxWidth / 4) -
+                                              (5 / 4),
+                                          height: 45),
+                                      borderColor: MyTheme.kDarkGrey,
+                                      children:
+                                          options.temperature!.map<Widget>((s) {
+                                        return getTabWidget(
+                                            s,
+                                            isSelectedForSecondOption[options
+                                                .temperature!
+                                                .indexOf(s)]);
+                                      }).toList(),
+                                      onPressed: (int index) {
+                                        valueForSecondComponent =
+                                            "$title - ${options.temperature![index]}";
+                                        for (int buttonIndex = 0;
+                                            buttonIndex <
+                                                isSelectedForSecondOption
+                                                    .length;
+                                            buttonIndex++) {
+                                          if (buttonIndex == index) {
+                                            isSelectedForSecondOption[
+                                                    buttonIndex] =
+                                                !isSelectedForSecondOption[
+                                                    buttonIndex];
+                                          } else {
+                                            isSelectedForSecondOption[
+                                                buttonIndex] = false;
+                                          }
+                                        }
+                                      },
+                                      isSelected: isSelectedForSecondOption,
+                                    ));
+                              }),
+                            ],
+                          ));
+                    }
+                  case 2:
+                    {
+                      var title = _choiceValues[index].label;
+
+                      Options options = _choiceValues[index].meta as Options;
+                      isSelectedForThirdOption = RxList(List.generate(
+                          options.temperature!.length, (index) => false));
+                      return Container(
+                          padding: const EdgeInsets.all(7),
+                          child: Column(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.max,
+                              children: [
+                               /* Text(
+                                  title,
+                                  textAlign: TextAlign.center,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.visible,
+                                  style: MyTheme.chatConversation,
+                                ),*/
+                                Align(
+                                    alignment: Alignment.topLeft,
+                                    child: Text(title,
+                                          textAlign: TextAlign.center,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.visible,
+                                          style: MyTheme.chatConversation,)),
+                                const SizedBox(height: 5),
+                                LayoutBuilder(builder: (context, constraints) {
+                                  return Obx(() => ToggleButtons(
+                                        constraints: BoxConstraints.expand(
+                                            width: (constraints.maxWidth / 4) -
+                                                (5 / 4),
+                                            height: 45),
+                                        borderColor: MyTheme.kDarkGrey,
+                                        children: options.temperature!
+                                            .map<Widget>((s) {
+                                          return getTabWidget(
+                                              s,
+                                              isSelectedForThirdOption[options
+                                                  .temperature!
+                                                  .indexOf(s)]);
+                                        }).toList(),
+                                        onPressed: (int index) {
+                                          valueForThirdComponent =
+                                              "$title - ${options.temperature![index]}";
+                                          for (int buttonIndex = 0;
+                                              buttonIndex <
+                                                  isSelectedForThirdOption
+                                                      .length;
+                                              buttonIndex++) {
+                                            if (buttonIndex == index) {
+                                              isSelectedForThirdOption[
+                                                      buttonIndex] =
+                                                  !isSelectedForThirdOption[
+                                                      buttonIndex];
+                                            } else {
+                                              isSelectedForThirdOption[
+                                                  buttonIndex] = false;
+                                            }
+                                          }
+                                        },
+                                        isSelected: isSelectedForThirdOption,
+                                      ));
+                                }),
+                                // LayoutBuilder(builder:
+                                //     (context, constraints) {
+                                //   return Obx(() => ToggleButtons(
+                                //         children: options
+                                //             .temperature!
+                                //             .map<Widget>((s) => getTabWidget(
+                                //                 s,
+                                //                 isSelectedForSecondOption[
+                                //                     options
+                                //                         .temperature!
+                                //                         .indexOf(
+                                //                             s)]))
+                                //             .toList(),
+                                //         onPressed: (int index) {
+                                //           valueForThirdComponent =
+                                //               "$title - ${options.temperature![index]}";
+                                //           for (int buttonIndex = 0;
+                                //               buttonIndex <
+                                //                   isSelectedForThirdOption
+                                //                       .length;
+                                //               buttonIndex++) {
+                                //             if (buttonIndex ==
+                                //                 index) {
+                                //               isSelectedForThirdOption[
+                                //                       buttonIndex] =
+                                //                   !isSelectedForThirdOption[
+                                //                       buttonIndex];
+                                //             } else {
+                                //               isSelectedForThirdOption[
+                                //                       buttonIndex] =
+                                //                   false;
+                                //             }
+                                //           }
+                                //         },
+                                //         isSelected:
+                                //             isSelectedForThirdOption,
+                                //       ));
+                                // })
+                              ]));
+                    }
+                  default:
+                    {
+                      final RxList<int> numericalValues = RxList(
+                          _determineDropDownValueForTimeUnit(
+                              "Days", _choiceValues[index].meta));
+                      initialValueForNumeric.value = numericalValues[0];
+                      var dataSetForString =
+                          getTimeUnit(_choiceValues[index].meta);
+                      initialValueForString =
+                          dataSetForString.keys.elementAt(0);
+                      var title = _choiceValues[index].label;
+
+                      return Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          Align(
+                              alignment: Alignment.topLeft,
+                              child: Text(title,
+                                    textAlign: TextAlign.center,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.visible,
+                                    style: MyTheme.chatConversation,)),
+                          const SizedBox(height: 5),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.max,
+                            children: [
+                              Obx(() {
+                                return Flexible(
+                                    fit: FlexFit.loose,
+                                    flex: 1,
+                                    child: NumberValueSelector(
+                                      data: numericalValues,
+                                      initialValue:
+                                          initialValueForNumeric.value,
+                                      label: title,
+                                      onSelectedValue: (selectedValue) {
+                                        _timeValueSelected.value =
+                                            selectedValue;
+                                        initialValueForNumeric.value =
+                                            int.parse(selectedValue);
+                                      },
+                                    ));
+                              }),
+                              Flexible(
+                                  fit: FlexFit.loose,
+                                  flex: 1,
+                                  child: StringValueSelector(
+                                    data: dataSetForString,
+                                    initialValue: initialValueForString,
+                                    label: title,
+                                    onSelectedValue: (selectedValue) {
+                                      initialValueForString = selectedValue;
+                                      _timeUnitSelected.value = selectedValue;
+                                      valueForFirstComponent =
+                                          "$title details \n";
+                                      numericalValues.value =
+                                          _determineDropDownValueForTimeUnit(
+                                              _timeUnitSelected.value,
+                                              _choiceValues[index].meta);
+                                      initialValueForNumeric.value =
+                                          numericalValues[0];
+                                    },
+                                  ))
+                            ],
+                          ),
+                        ],
+                      );
+                    }
+                }
+              }),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(2),
+            child: ElevatedButton(
+              child: Text('Submit',
+                  style:
+                      MyTheme.chatSenderName.copyWith(color: MyTheme.kWhite)),
+              style: ButtonStyle(
+                  backgroundColor: MaterialStateProperty.all(MyTheme.kRedish)),
+              onPressed: () async {
+                ValueHolderForBot holderForBot = ValueHolderForBot();
+
+                valueForFirstComponent = initialValueForString +
+                    " " +
+                    initialValueForNumeric.toString();
+                holderForBot.firstValue = valueForFirstComponent;
+                holderForBot.secondValue = valueForSecondComponent;
+                holderForBot.thirdValue = valueForThirdComponent;
+                holderForBot.valueTag = bottomSheetTitle.value;
+                String valueToSend = "Details \n" +
+                    valueForFirstComponent +
+                    "\n" +
+                    valueForSecondComponent +
+                    "\n" +
+                    valueForThirdComponent;
+
+                _bottomSheetValueSelection.clear();
+
+                _choiceValues.clear();
+
+                await _sendMessage(valueToSend);
+                Get.back();
+
+                Future.delayed(const Duration(milliseconds: 250), () {
+                  if (_multipleValueQueue.isNotEmpty) {
+                    _isWaitForAnotherMessage.value = true;
+                  }
+                });
+              },
             ),
+          )
+        ],
       ),
     );
   }
@@ -1036,7 +1342,7 @@ class _ChatRoomState extends State<ChatRoom> /*with RestorationMixin*/ {
 }
 
 class StringValueSelector extends StatelessWidget {
-  final buttonPadding = const EdgeInsets.fromLTRB(0, 8, 0, 0);
+  final buttonPadding = const EdgeInsets.fromLTRB(0, 0, 0, 0);
 
   // final List<int> data;
   final Map<String, int> data;
@@ -1059,17 +1365,17 @@ class StringValueSelector extends StatelessWidget {
     _currentHorizontalIntValue.value = data[initialValue]!;
     return Column(
       children: [
-        Container(
+        /*  Container(
             alignment: AlignmentDirectional.centerStart,
             margin: const EdgeInsets.only(left: 4),
-            child: Text(label)),
+            child: Text(label)),*/
         Padding(
           padding: buttonPadding,
           child: Container(
             decoration: _getShadowDecoration(),
-            child: Card(
-                child: Row(
+            child: Row(
               mainAxisSize: MainAxisSize.max,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
                 Expanded(
                     child: Padding(
@@ -1095,12 +1401,15 @@ class StringValueSelector extends StatelessWidget {
                               ),
                             )),
                         padding: const EdgeInsets.only(left: 12))),
+                const SizedBox(
+                  width: 5,
+                ),
                 Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: _getDropdownIcon(),
                 )
               ],
-            )),
+            ),
           ),
         ),
       ],
@@ -1116,20 +1425,11 @@ class StringValueSelector extends StatelessWidget {
         });
   }
 
-/*  _getDslDecoration() {
-    return const BoxDecoration(
-      border: BorderDirectional(
-        bottom: BorderSide(width: 1, color: Colors.black12),
-        top: BorderSide(width: 1, color: Colors.black12),
-      ),
-    );
-  }*/
-
   BoxDecoration _getShadowDecoration() {
     return BoxDecoration(
       boxShadow: <BoxShadow>[
         BoxShadow(
-          color: Colors.black.withOpacity(0.06),
+          color: Colors.white.withOpacity(0.06),
           spreadRadius: 4,
           offset: const Offset(0.0, 0.0),
           blurRadius: 15.0,
@@ -1138,16 +1438,57 @@ class StringValueSelector extends StatelessWidget {
     );
   }
 
-  Icon _getDropdownIcon() {
-    return const Icon(
+  Widget _getDropdownIcon() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Container(
+            color: MyTheme.kRedish,
+            child: IconButton(
+              focusColor: MyTheme.kRedish,
+              onPressed: () {
+                if ((_currentHorizontalIntValue.value - 1) > 0) {
+                  _currentHorizontalIntValue.value =
+                      _currentHorizontalIntValue.value - 1;
+                  onSelectedValue.call(data.keys
+                      .elementAt(_currentHorizontalIntValue.value - 1));
+                }
+              },
+              icon: Icon(
+                Icons.keyboard_arrow_up_sharp,
+                color: MyTheme.kWhite,
+              ),
+            )),
+        const SizedBox(
+          height: 10,
+        ),
+        Container(
+            color: MyTheme.kRedish,
+            child: IconButton(
+              onPressed: () {
+                if (_currentHorizontalIntValue.value != (data.length)) {
+                  _currentHorizontalIntValue.value =
+                      _currentHorizontalIntValue.value + 1;
+                  onSelectedValue.call(data.keys
+                      .elementAt(_currentHorizontalIntValue.value - 1));
+                }
+              },
+              icon: Icon(
+                Icons.keyboard_arrow_down_sharp,
+                color: MyTheme.kWhite,
+              ),
+            ))
+      ],
+    );
+    /*return const Icon(
       Icons.unfold_more,
       color: Colors.blueAccent,
-    );
+    );*/
   }
 }
 
 class NumberValueSelector extends StatelessWidget {
-  final buttonPadding = const EdgeInsets.fromLTRB(0, 8, 0, 0);
+  final buttonPadding = const EdgeInsets.fromLTRB(0, 0, 0, 0);
 
   final List<int> data;
 
@@ -1170,17 +1511,17 @@ class NumberValueSelector extends StatelessWidget {
     _currentHorizontalIntValue.value = initialValue;
     return Column(
       children: [
-        Container(
-            alignment: AlignmentDirectional.centerStart,
-            margin: const EdgeInsets.only(left: 4),
-            child: Text(label)),
+        // Container(
+        //   alignment: AlignmentDirectional.centerStart,
+        //   margin: const EdgeInsets.only(left: 4),
+        //   child: Text(label)),
         Padding(
           padding: buttonPadding,
           child: Container(
             decoration: _getShadowDecoration(),
-            child: Card(
-                child: Row(
+            child: Row(
               mainAxisSize: MainAxisSize.max,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
                 Expanded(
                     child: Padding(
@@ -1192,11 +1533,6 @@ class NumberValueSelector extends StatelessWidget {
                             minValue: data[0],
                             maxValue: data[data.length - 1],
                             step: 1,
-                            /*textMapper: (s) {
-                                return data.keys.elementAt(
-                                    data.values.toList().indexOf(int.parse(s)));
-
-                              },*/
                             axis: Axis.vertical,
                             onChanged: (value) {
                               _currentHorizontalIntValue.value = value;
@@ -1209,41 +1545,26 @@ class NumberValueSelector extends StatelessWidget {
                           );
                         }),
                         padding: const EdgeInsets.only(left: 12))),
+                const SizedBox(
+                  width: 5,
+                ),
                 Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: _getDropdownIcon(),
                 )
               ],
-            )),
+            ),
           ),
         ),
       ],
     );
   }
 
-  DirectSelectItem<String> getDropDownMenuItem(String value) {
-    return DirectSelectItem<String>(
-        itemHeight: 56,
-        value: value,
-        itemBuilder: (context, value) {
-          return Text(value);
-        });
-  }
-
-/*  _getDslDecoration() {
-    return const BoxDecoration(
-      border: BorderDirectional(
-        bottom: BorderSide(width: 1, color: Colors.black12),
-        top: BorderSide(width: 1, color: Colors.black12),
-      ),
-    );
-  }*/
-
   BoxDecoration _getShadowDecoration() {
     return BoxDecoration(
       boxShadow: <BoxShadow>[
         BoxShadow(
-          color: Colors.black.withOpacity(0.06),
+          color: Colors.white.withOpacity(0.06),
           spreadRadius: 4,
           offset: const Offset(0.0, 0.0),
           blurRadius: 15.0,
@@ -1252,10 +1573,47 @@ class NumberValueSelector extends StatelessWidget {
     );
   }
 
-  Icon _getDropdownIcon() {
-    return const Icon(
+  Widget _getDropdownIcon() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Container(
+            color: MyTheme.kRedish,
+            child: IconButton(
+              focusColor: MyTheme.kRedish,
+              onPressed: () {
+                if (_currentHorizontalIntValue.value != (data.length)) {
+                  _currentHorizontalIntValue.value =
+                      _currentHorizontalIntValue.value + 1;
+                }
+              },
+              icon: Icon(
+                Icons.add,
+                color: MyTheme.kWhite,
+              ),
+            )),
+        const SizedBox(
+          height: 10,
+        ),
+        Container(
+            color: MyTheme.kRedish,
+            child: IconButton(
+              onPressed: () {
+                if ((_currentHorizontalIntValue.value - 1) > 0) {
+                  _currentHorizontalIntValue.value =
+                      _currentHorizontalIntValue.value - 1;
+                }
+              },
+              icon: Icon(
+                Icons.remove,
+                color: MyTheme.kWhite,
+              ),
+            ))
+      ],
+    );
+    /*return const Icon(
       Icons.unfold_more,
       color: Colors.blueAccent,
-    );
+    );*/
   }
 }
